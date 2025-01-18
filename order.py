@@ -1,4 +1,5 @@
 import yfinance as yf
+from datetime import datetime, timedelta
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
@@ -31,6 +32,18 @@ def get_stock_price(ticker: str, date: str):
     # Extract and return the closing price for the specified date
     return { 'price' : stock_data['Open'].iloc[0].iloc[0] }
 
+
+def calculate_start_date(end_date_str, date_range):
+    # Convert the end date string to a datetime object
+    end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
+    
+    # Calculate the start date by subtracting the date range (in days)
+    start_date = end_date - timedelta(days=date_range)
+    
+    # Convert the start date back to a string in 'YYYY-MM-DD' format
+    start_date_str = start_date.strftime('%Y-%m-%d')
+    
+    return start_date_str
 
 # input: an id 
 # checks the db for list of users
@@ -166,10 +179,25 @@ def get_transaction_history(id):
 def get_user_info(id):
     return collection.find_one({"name" : id})
 
+def get_historical_data(ticker, start_date, end_date):
+    # Create a Ticker object
+    stock = yf.Ticker(ticker)
+
+    # Fetch historical data for the specified date range
+    historical_data = stock.history(start=start_date, end=end_date)
+
+    return historical_data
+
+# range should be an integer representing # of days, since we only have resolution down to days
+def get_market_data(ticker, end_date, date_range):
+    start_date = calculate_start_date(end_date, date_range)
+    data = get_historical_data(ticker, start_date, end_date)
+    return data
+
     
     
 
-check_for_id("Bob")
+#check_for_id("Bob")
 #execute_buy('Bob', 'AAPL', '2023-11-06', 5)
 
 #execute_buy('Bob', 'AAPL', '2023-11-11', 10)
@@ -178,12 +206,14 @@ check_for_id("Bob")
 
 #execute_sell('Bob', 'AAPL', '2024-12-26', 11)
 
-print(get_transaction_history('Bob'))
-print(get_user_info("Bob"))
+#print(get_transaction_history('Bob'))
+#print(get_user_info("Bob"))
 
-execute_buy("Bob", "NVDA", "2022-12-12", 10)
-execute_buy("Bob", "NVDA", "2022-09-10", 5)
-execute_sell("Bob", "NVDA", "2024-07-07", 15)
+#execute_buy("Bob", "NVDA", "2022-12-12", 10)
+#execute_buy("Bob", "NVDA", "2022-09-10", 5)
+#execute_sell("Bob", "NVDA", "2024-07-07", 15)
+
+print(get_market_data('NVDA', '2023-01-01', 30))
 
 
 # Example usage
