@@ -45,10 +45,27 @@ def calculate_start_date(end_date_str, date_range):
     
     return start_date_str
 
+def are_consec_dates(datetime1, datetime2):
+    date1 = datetime1.date()
+    date2 = datetime2.date()
+    return date2 == date1 + timedelta(days=1)
+
+def get_login_bonus(current_streak):
+    if current_streak < 5:
+        return 100
+    elif current_streak < 10:
+        return 200
+    elif current_streak < 30:
+        return 500
+    else:
+        return 10000
+
 # input: an id 
 # checks the db for list of users
 # if it exists, return the user information in dictionary format
 # if it does not exist, create user information and return in dictionary format
+
+# this is when login happens, so we will simply check the login streak and stuff like that
 def check_for_id(id):
     found_user = collection.find_one({"name": id})
     if found_user is None:
@@ -57,12 +74,51 @@ def check_for_id(id):
             "name" : id,
             "portfolio" : {},
             "transaction_history" : [],
-            "current_funds" : 100000
+            "current_funds" : 100000,
+            "current_streak" : 1,
+            "last_login" : datetime.now()
             }
         collection.insert_one(document)
-        print(document)
+        return document
     else:
-        print(found_user)
+        # returning user
+        new_login_time = datetime.now()
+
+        # if logged in consecutive dates (we continue the streak)
+        if are_consec_dates(found_user['last_login'], new_login_time) == True:
+            collection.update_one(
+                {'name' : id},
+                    {
+                        '$set' : {
+                              'current_streak' : found_user['current_streak'] + 1,
+                              'last_login' : new_login_time,
+                              'current_funds' : found_user['current_funds'] + get_login_bonus(found_user['current_streak'] + 1)
+                              }
+                    }
+            )
+        # logged in non consecutive dates
+        elif found_user['last_login'].date() != new_login_time.date():
+            collection.update_one(
+                {'name' : id},
+                    {
+                        '$set' : {
+                              'current_streak' : 1,
+                              'last_login' : new_login_time,
+                              'current_funds' : found_user['current_funds'] + get_login_bonus(1)
+                              }
+                    }
+            )
+        # otherwise logged in on the same date
+        else:
+            collection.update_one(
+                {'name' : id},
+                    {
+                        '$set' : {
+                              'last_login' : new_login_time,
+                              }
+                    }
+            )
+        return found_user
 
 
 # give id for user
@@ -194,10 +250,7 @@ def get_market_data(ticker, end_date, date_range):
     data = get_historical_data(ticker, start_date, end_date)
     return data
 
-    
-    
-
-#check_for_id("Bob")
+check_for_id("Bob")
 #execute_buy('Bob', 'AAPL', '2023-11-06', 5)
 
 #execute_buy('Bob', 'AAPL', '2023-11-11', 10)
@@ -213,7 +266,7 @@ def get_market_data(ticker, end_date, date_range):
 #execute_buy("Bob", "NVDA", "2022-09-10", 5)
 #execute_sell("Bob", "NVDA", "2024-07-07", 15)
 
-print(get_market_data('NVDA', '2023-01-01', 30))
+#print(get_market_data('NVDA', '2023-01-01', 30))
 
 
 # Example usage
