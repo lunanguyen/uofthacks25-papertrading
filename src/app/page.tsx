@@ -2,15 +2,20 @@
 import { useState } from "react";
 import { PageHeader } from "./layout/PageHeader";
 
-
 export default function Home() {
   return (
-    <div className=" scroll-smooth grid bg-neutral-100 grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
+    <div className=" scroll-smooth grid bg-neutral-100 grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-8 sm:p-20 font-[family-name:var(--font-geist-sans)]">
 
       <PageHeader />
-      <div className="flex flex-col gap-4 items-center">
-        <h1 className="text-4xl"> Welcome to the <span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500 "> Future </span></h1>
-        <h1 className="text-4xl"> of Trading</h1>
+      <div className="flex flex-col gap-2 items-center">
+        <h1 className="text-5xl mt-16"> Welcome to the </h1>
+        <h1 className="text-7xl bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500"> Future 
+        <span className="text-6xl text-black"> of </span>
+        Trading</h1>
+
+        <h1> with <button className="underline decoration-solid">Paper Trading</button>, your parents won't disown you !</h1>
+        <img src = "https://www.pngall.com/wp-content/uploads/8/Stock-Trading-PNG-High-Quality-Image.png" width="60%"
+        className="mt-10"/>
       </div>
       
       {/* make two button to choose from real-time trading or time-skip */}
