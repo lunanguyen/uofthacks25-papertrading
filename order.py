@@ -127,22 +127,17 @@ def execute_sell(id, ticker, date, quantity):
     # no need to calculate new average price, or percentage change, we just need to change quantity
     current_quantity = stock_update['quantity']
     new_quantity = current_quantity - quantity
-    # we should remove this from our holdings
-    if new_quantity == 0:
-         collection.update_one(
-              {'name' : id},
-              {'$unset' : {f'portfolio.{ticker}' : ""}}
-         )
-    else:
-         collection.update_one(
-            {'name' : id},
-            {'$set' : {
-                f'portfolio.{ticker}' : {
-                    "quantity" : new_quantity, "avg_price" : stock_update["avg_price"], "pct_change" : stock_update["pct_change"]
-                    }
+    current_avg_price = stock_update["avg_price"]
+    new_percentage_change = (prc - current_avg_price) / current_avg_price * 100
+    collection.update_one(
+        {'name' : id},
+        {'$set' : {
+            f'portfolio.{ticker}' : {
+                "quantity" : new_quantity, "avg_price" : current_avg_price, "pct_change" : new_percentage_change
                 }
             }
-         )
+        }
+    )
     # we should add the money to our account
     old_money = user['current_funds']
     collection.update_one(
@@ -163,22 +158,32 @@ def execute_sell(id, ticker, date, quantity):
     )
     # finished
 
-         
 
+def get_transaction_history(id):
+    user = collection.find_one({"name" : id})
+    return user["transaction_history"]
 
-    
+def get_user_info(id):
+    return collection.find_one({"name" : id})
 
     
     
 
 check_for_id("Bob")
-execute_buy('Bob', 'AAPL', '2023-11-06', 5)
+#execute_buy('Bob', 'AAPL', '2023-11-06', 5)
 
-execute_buy('Bob', 'AAPL', '2023-11-11', 10)
+#execute_buy('Bob', 'AAPL', '2023-11-11', 10)
 
 #execute_buy('Bob', 'AAPL', '2024-12-20', 10000000000)
 
-execute_sell('Bob', 'AAPL', '2024-12-26', 11)
+#execute_sell('Bob', 'AAPL', '2024-12-26', 11)
+
+print(get_transaction_history('Bob'))
+print(get_user_info("Bob"))
+
+execute_buy("Bob", "NVDA", "2022-12-12", 10)
+execute_buy("Bob", "NVDA", "2022-09-10", 5)
+execute_sell("Bob", "NVDA", "2024-07-07", 15)
 
 
 # Example usage
