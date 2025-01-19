@@ -17,7 +17,7 @@ export function BuySell() {
     const BuySellStock = async () => {
         console.log("BuyStock button clicked!");
         try {
-            if (option == "Buy") {
+            if (option ==                                   "Buy") {
                 const data = await buyStock("Bob", 'NVDA', '2023-01-03', 5);
                 console.log(data)
                 console.log("buy!")
