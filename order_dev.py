@@ -7,9 +7,6 @@ from datetime import datetime, timedelta
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
-import pandas as pd
-
-app = Flask(__name__)
 
 # Load environment variables
 load_dotenv()
@@ -138,7 +135,6 @@ def complete_quest(id, cur_date):
 # if it does not exist, create user information and return in dictionary format
 
 # this is when login happens, so we will simply check the login streak and stuff like that
-@app.route('/api/users/<string:id>', methods=['GET'])
 def check_for_id(id): 
     found_user = collection.find_one({"name": id})
     cur_date = datetime.now()
@@ -148,6 +144,8 @@ def check_for_id(id):
             "name" : id,
             "portfolio" : {},
             "transaction_history" : [],
+            "simulator_portfolio" : {},
+            "simulator_transaction_history" : [],
             "current_funds" : 100000,
             "portfolio_value" : 100000,
             "current_streak" : 1,
@@ -220,7 +218,6 @@ def check_for_id(id):
 
 
 # give id for user
-@app.route('/api/users/<string:id>/buy', methods=['POST'])
 def execute_buy(id):
     try:
         # Extract data from the request body
@@ -303,7 +300,6 @@ def execute_buy(id):
         return jsonify({"error": str(e)}), 500
         # end of transaction
     
-@app.route('/api/users/<string:id>/sell', methods=['POST'])
 def execute_sell(id):
     try:
         # Get the JSON data from the request
@@ -380,12 +376,12 @@ def execute_sell(id):
         return jsonify({"error": str(e)}), 500
     # finished
 
-@app.route('/api/users/<string:id>/transactions', methods=['GET'])
+
 def get_transaction_history(id):
     user = collection.find_one({"name" : id})
     return user["transaction_history"]
 
-@app.route('/api/users/<string:questId>', methods=['GET'])
+
 def get_quest(id):
     user = collection.find_one({"name" : id})
     return dumps(user["quest"]), 200
@@ -403,38 +399,18 @@ def get_historical_data(ticker, start_date, end_date):
 
     return historical_data
 
-@app.route('/api/marketdata/<string:ticker>', methods=['GET'])
+
 # range should be an integer representing # of days, since we only have resolution down to days
-# end_date: YYYY-MM-DD, date_range: number of days
-def get_market_data(ticker):
-    # Get query parameters
-    end_date = request.args.get('end_date')
-    date_range = request.args.get('date_range', type=int)
-
-    if not end_date or date_range is None:
-        return jsonify({"error": "Missing parameters"}), 400
-
-    # Calculate start date based on date range
+def get_market_data(ticker, end_date, date_range):
     start_date = calculate_start_date(end_date, date_range)
-
-    # Fetch historical market data
     data = get_historical_data(ticker, start_date, end_date)
-    print(data)
+    return data
 
-    # Convert DataFrame to dictionary (or list of dictionaries) to be JSON serializable
-    data_dict = data.to_dict(orient='records')
 
-    return jsonify(data_dict)
-
-@app.route("/api/members")
 def members():
     return {"members": ["Member1", "Member2", "Member3", "Member4"]}
 
-if __name__ == '__main__':
-    app.run(debug=True)
-
-#check_for_id("Bob")
-get_market_data('NVDA')
+check_for_id("Bob")
 #execute_buy('Bob', 'AAPL', '2023-11-06', 500)
 
 #execute_buy('Bob', 'AAPL', '2023-11-11', 100)
