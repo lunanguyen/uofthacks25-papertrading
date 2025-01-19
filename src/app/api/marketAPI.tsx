@@ -4,12 +4,12 @@ const api = axios.create({
     baseURL: 'http://localhost:5000/api',
 });
 
-export const getMarketData = async (ticker: string, currentDate: string, dateRange: string) => {
+export const getMarketData = async (ticker: string, end_date: string, date_range: number) => {
     try {
         const response = await api.get(`/marketdata/${ticker}`, {
             params: {
-                currentDate,
-                dateRange,
+                end_date,
+                date_range,
             },
         });
         console.log(response.status)

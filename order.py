@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
+import pandas as pd
 
 app = Flask(__name__)
 
@@ -101,7 +102,6 @@ def add_days_to_datetime(original_datetime, days):
     future_datetime = original_datetime + timedelta(days=days)
     return future_datetime
 
-# only call this if date is greater than or equal to end date --> we will query the end date price if we are over
 def complete_quest(id, cur_date):
     user_info = collection.find_one({"name" : id})
     end_date = user_info["quest"].get("end_date")
@@ -385,6 +385,12 @@ def get_transaction_history(id):
     user = collection.find_one({"name" : id})
     return user["transaction_history"]
 
+@app.route('/api/quest/<string:questId>', methods=['GET'])
+def get_quest(questId):
+    user = collection.find_one({"name" : questId})
+    return dumps(user["quest"]), 200
+
+
 def get_user_info(id):
     return collection.find_one({"name" : id})
 
@@ -395,14 +401,33 @@ def get_historical_data(ticker, start_date, end_date):
     # Fetch historical data for the specified date range
     historical_data = stock.history(start=start_date, end=end_date)
 
+    historical_data.reset_index(inplace=True)
+
+    historical_data['Date'] = historical_data['Date'].dt.strftime('%Y-%m-%d')
+
     return historical_data
 
 @app.route('/api/marketdata/<string:ticker>', methods=['GET'])
 # range should be an integer representing # of days, since we only have resolution down to days
-def get_market_data(ticker, end_date, date_range):
+# end_date: YYYY-MM-DD, date_range: number of days
+def get_market_data(ticker):
+    # Get query parameters
+    end_date = request.args.get('end_date')
+    date_range = request.args.get('date_range', type=int)
+
+    if not end_date or date_range is None:
+        return jsonify({"error": "Missing parameters"}), 400
+
+    # Calculate start date based on date range
     start_date = calculate_start_date(end_date, date_range)
+
+    # Fetch historical market data
     data = get_historical_data(ticker, start_date, end_date)
-    return data
+
+    # Convert DataFrame to dictionary (or list of dictionaries) to be JSON serializable
+    data_dict = data.to_dict(orient='records')
+
+    return jsonify(data_dict)
 
 @app.route("/api/members")
 def members():
