@@ -70,7 +70,7 @@ export function BuySell() {
         </form>
 
         <div className="flex flex-row justify-between">
-            <h1> BTC Price</h1>
+            <h1> NVDA Price</h1>
             <h1> {price}</h1>
         </div>
         <div className="flex flex-row justify-between">
