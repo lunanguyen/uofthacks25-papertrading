@@ -13,13 +13,11 @@ export function BuySell() {
     const [quantity, setQuantity] = useState<number>(0);
 
     const BuyStock = async () => {
+        console.log("BuyStock button clicked!");
         try {
-            if (session) {
-                await buyStock(session.user.email, ticker, "a fake date", 5);
-                console.log("buy!")
-            } else {
-                console.log("no user")
-            }
+            const data = await buyStock("Bob", ticker, "2020-12-10", 5);
+            console.log(data)
+            console.log("buy!")
             
         } catch{(err) => {
             console.log(err);
