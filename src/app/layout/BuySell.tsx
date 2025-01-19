@@ -24,7 +24,6 @@ export function BuySell() {
         } catch{(err) => {
             console.log(err);
         }}
-        cons
     }
 
     // console.log(session)
