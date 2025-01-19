@@ -401,6 +401,10 @@ def get_historical_data(ticker, start_date, end_date):
     # Fetch historical data for the specified date range
     historical_data = stock.history(start=start_date, end=end_date)
 
+    historical_data.reset_index(inplace=True)
+
+    historical_data['Date'] = historical_data['Date'].dt.strftime('%Y-%m-%d')
+
     return historical_data
 
 @app.route('/api/marketdata/<string:ticker>', methods=['GET'])
