@@ -11,6 +11,9 @@ import pandas as pd
 
 app = Flask(__name__)
 
+# Enable CORS
+CORS(app, resources={r"/*": {"origins": "*"}})
+
 # Load environment variables
 load_dotenv()
 
@@ -297,7 +300,7 @@ def execute_buy(id):
             }
         )
 
-        return jsonify({"message": "Stock purchase successful"}), 200
+        return jsonify({"message": "Stock purchase successful yay!"}), 200
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
