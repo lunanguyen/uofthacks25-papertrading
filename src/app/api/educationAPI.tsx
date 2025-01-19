@@ -15,10 +15,10 @@ export const getDailyQuest = async (questId: string) => {
     }
 }
 
-export const claimQuest = async (username: string, questId: string) => {
+export const claimQuest = async (id: string, questId: string) => {
     try {
         const response = await api.post(`/quest/claim`, {
-            username,
+            id,
             questId
         });
         console.log(response.status);

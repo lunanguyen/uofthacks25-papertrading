@@ -23,10 +23,10 @@ export const startSimulation = async (
   }
 };
 
-export const skipTime = async (username: string, date: string) => {
+export const skipTime = async (id: string, date: string) => {
     try {
       const response = await api.post("/simulation/skip", {
-        username,
+        id,
         date,
       });
       console.log("Time skipped:", response.data);

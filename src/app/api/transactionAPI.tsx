@@ -4,9 +4,9 @@ const api = axios.create({
     baseURL: 'http://localhost:5000/api',
 });
 
-export const getTransactionHistory = async (username: string) => {
+export const getTransactionHistory = async (id: string) => {
     try {
-        const response = await api.get(`/users/${username}/transactions`);
+        const response = await api.get(`/users/${id}/transactions`);
         console.log(response.status)
         return response.data;
     } catch (error) {
@@ -15,10 +15,11 @@ export const getTransactionHistory = async (username: string) => {
     }
 };
 
-export const buyStock = async (username: string, stockTicker: string, date: string, quantity: number) => {
+export const buyStock = async (id: string, ticker: string, date: string, quantity: number) => {
     try {
-        const response = await api.post(`/users/${username}/buy`, {
-            stockTicker,
+        const response = await api.post(`/users/${id}/buy`, {
+            ticker,
+            date,
             quantity,
           });
         console.log(response.status)
@@ -29,10 +30,11 @@ export const buyStock = async (username: string, stockTicker: string, date: stri
   }
 };
 
-export const sellStock = async (username: string, stockTicker: string, date: string, quantity: number) => {
+export const sellStock = async (id: string, stockTicker: string, date: string, quantity: number) => {
     try {
-        const response = await api.post(`/users/${username}/sell`, {
+        const response = await api.post(`/users/${id}/sell`, {
             stockTicker,
+            date,
             quantity,
           });
         return response.data;

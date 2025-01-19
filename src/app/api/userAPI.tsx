@@ -17,9 +17,9 @@ export const getUserInfo = async (id: string) => {
 };
 
 // Get user streak
-export const getUserstreak = async (username: string) => {
+export const getUserstreak = async (id: string) => {
     try {
-        const response = await api.get(`/users/${username}/streak`);
+        const response = await api.get(`/users/${id}/streak`);
         console.log(response.status);
         return response.data.current_streak;
     } catch (error) {

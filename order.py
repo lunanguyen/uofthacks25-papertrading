@@ -1,4 +1,6 @@
 import yfinance as yf
+from bson import ObjectId
+from bson.json_util import dumps
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from datetime import datetime, timedelta
@@ -7,7 +9,6 @@ import os
 from dotenv import load_dotenv
 
 app = Flask(__name__)
-CORS(app)
 
 # Load environment variables
 load_dotenv()
@@ -137,6 +138,7 @@ def complete_quest(id, cur_date):
 # if it does not exist, create user information and return in dictionary format
 
 # this is when login happens, so we will simply check the login streak and stuff like that
+@app.route('/api/users/<string:id>', methods=['GET'])
 def check_for_id(id): 
     found_user = collection.find_one({"name": id})
     cur_date = datetime.now()
@@ -161,6 +163,7 @@ def check_for_id(id):
             }
         collection.insert_one(document)
         found_user = collection.find_one({"name" : id})
+        return dumps(found_user), 201
     else:
         # returning user
         new_login_time = datetime.now()
@@ -213,32 +216,54 @@ def check_for_id(id):
         # complete quest if we need to
         if cur_date >= found_user["quest"].get("end_date"):
             complete_quest(id, cur_date)
-        return found_user
+    return dumps(found_user), 200
 
 
 # give id for user
-@app.route('/users/<string:username>/buy', methods=['POST'])
-def execute_buy(id, ticker, date, quantity):
-    #try:
-        prc = get_stock_price(ticker, date)['price'] # this should go into try except but it doesnt work
+@app.route('/api/users/<string:id>/buy', methods=['POST'])
+def execute_buy(id):
+    try:
+        # Extract data from the request body
+        data = request.get_json()
+        ticker = data.get('ticker')
+        date = data.get('date')
+        quantity = data.get('quantity')
+
+        # Validate input
+        if not ticker or not date or quantity is None:
+            return jsonify({"error": "Invalid input"}), 400
+
+        # Get stock price
+        prc = get_stock_price(ticker, date)['price']
         if prc == -1:
-            # handle error, although this shouldn't happen
-            raise Exception("Ticker Invalid")
-        user = collection.find_one({"name" : id})
+            return jsonify({"error": "Invalid ticker"}), 400
+
+        # Fetch user details
+        user = collection.find_one({"name": id})
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
         if prc * quantity > user['current_funds']:
-            # not enough money available
-            raise Exception("Not enough funds")
-        # else we can execute the trade, so we want to add this to transaction history and also add to portfolio
+            return jsonify({"error": "Not enough funds"}), 400
 
-        # add to transaction history
+        # Update transaction history
+        collection.update_one(
+            {'name': id},
+            {
+                "$push": {
+                    "transaction_history": {
+                        'type': "buy",
+                        'ticker': ticker,
+                        'date': date,
+                        'prc': prc,
+                        'quantity': quantity
+                    }
+                }
+            }
+        )
 
-        queryid = { 'name' : id }
-        newvalues = { "$push" : {"transaction_history" : {'type' : "buy", 'ticker' : ticker, 'date' : date, 'prc' : prc, 'quantity' : quantity}}}
-        collection.update_one(queryid, newvalues)
-
-        # add to portfolio
+        # Update portfolio
         stock_update = user['portfolio'].get(ticker)
-
         if stock_update is None:
             new_quantity = quantity
             new_average_price = prc
@@ -246,88 +271,120 @@ def execute_buy(id, ticker, date, quantity):
         else:
             current_quantity = stock_update['quantity']
             current_average_price = stock_update['avg_price']
-    
             new_quantity = current_quantity + quantity
             new_average_price = (current_quantity * current_average_price + quantity * prc) / new_quantity
             new_percentage_change = (prc - new_average_price) / new_average_price * 100
 
         collection.update_one(
-            {'name' : id},
+            {'name': id},
             {
-                '$set': {f'portfolio.{ticker}': {'quantity' : new_quantity, 'avg_price' : new_average_price, 'pct_change' : new_percentage_change}}
-            }
-        )
-
-        # subtract amount of possible money from portfolio
-        old_money = user['current_funds']
-        collection.update_one(
-            {'name' : id},
-            {
-                '$set' : {'current_funds' : old_money - prc * quantity }
-            }
-        )
-
-        # end of transaction
-        # no need to return anything?
-        # return 0
-    
-@app.route('/users/<string:username>/sell', methods=['POST'])
-def execute_sell(id, ticker, date, quantity):
-    prc = get_stock_price(ticker, date)['price']
-
-    if prc == -1:
-        # handle error, although this shouldn't happen
-        raise Exception("Ticker Invalid")
-    
-    user = collection.find_one({"name" : id})
-    stock_update = user['portfolio'].get(ticker)
-    # we don't have enough stock
-    if stock_update is None or stock_update['quantity'] < quantity:
-         raise Exception("Not enough stock")
-    # otherwise, we should have enough, so sell the stock
-    # problem is how do we revert the computation of percentage change?
-    # we have to look at buy orders? not sure how much the average price will decrease
-    # "realized" value --> so we don't really remove it, since it is percentage change from this stock?
-    # no need to calculate new average price, or percentage change, we just need to change quantity
-    current_quantity = stock_update['quantity']
-    new_quantity = current_quantity - quantity
-    current_avg_price = stock_update["avg_price"]
-    new_percentage_change = (prc - current_avg_price) / current_avg_price * 100
-    collection.update_one(
-        {'name' : id},
-        {'$set' : {
-            f'portfolio.{ticker}' : {
-                "quantity" : new_quantity, "avg_price" : current_avg_price, "pct_change" : new_percentage_change
+                '$set': {
+                    f'portfolio.{ticker}': {
+                        'quantity': new_quantity,
+                        'avg_price': new_average_price,
+                        'pct_change': new_percentage_change
+                    }
                 }
             }
-        }
-    )
-    # we should add the money to our account
-    old_money = user['current_funds']
-    collection.update_one(
-        {'name' : id},
-        {
-            '$set' : {'current_funds' : old_money + prc * quantity }
-        }
-    )
-    # we should record this sale in our transaction history
-    collection.update_one(
-        {'name' : id},
-        {
-            "$push" : {
-                "transaction_history" :
-                {'type' : "sell", 'ticker' : ticker, 'date' : date, 'prc' : prc, 'quantity' : quantity}
+        )
+
+        # Update current funds
+        old_money = user['current_funds']
+        collection.update_one(
+            {'name': id},
+            {
+                '$set': {'current_funds': old_money - prc * quantity}
             }
-        }
-    )
+        )
+
+        return jsonify({"message": "Stock purchase successful"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+        # end of transaction
+    
+@app.route('/api/users/<string:id>/sell', methods=['POST'])
+def execute_sell(id):
+    try:
+        # Get the JSON data from the request
+        data = request.get_json()
+        ticker = data.get('ticker')
+        date = data.get('date')
+        quantity = data.get('quantity')
+
+        # Validate input
+        if not ticker or not date or quantity is None:
+            return jsonify({"error": "Invalid input"}), 400
+
+        # Get stock price
+        prc = get_stock_price(ticker, date)['price']
+        if prc == -1:
+            return jsonify({"error": "Invalid ticker"}), 400
+
+        # Fetch user details
+        user = collection.find_one({"name": id})
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        # Check if the user has enough stock to sell
+        stock_update = user['portfolio'].get(ticker)
+        if stock_update is None or stock_update['quantity'] < quantity:
+            return jsonify({"error": "Not enough stock"}), 400
+
+        # Update portfolio: decrease stock quantity
+        current_quantity = stock_update['quantity']
+        new_quantity = current_quantity - quantity
+        current_avg_price = stock_update["avg_price"]
+        new_percentage_change = (prc - current_avg_price) / current_avg_price * 100
+
+        collection.update_one(
+            {'name': id},
+            {'$set': {
+                f'portfolio.{ticker}': {
+                    "quantity": new_quantity,
+                    "avg_price": current_avg_price,
+                    "pct_change": new_percentage_change
+                }
+            }}
+        )
+
+        # Add money to user's account (current funds)
+        old_money = user['current_funds']
+        collection.update_one(
+            {'name': id},
+            {
+                '$set': {'current_funds': old_money + prc * quantity}
+            }
+        )
+
+        # Record the transaction in history
+        collection.update_one(
+            {'name': id},
+            {
+                "$push": {
+                    "transaction_history": {
+                        'type': "sell",
+                        'ticker': ticker,
+                        'date': date,
+                        'prc': prc,
+                        'quantity': quantity
+                    }
+                }
+            }
+        )
+
+        # Return a success response
+        return jsonify({"message": "Stock sale successful"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
     # finished
 
-@app.route('/users/<string:username>/transactions', methods=['GET'])
+@app.route('/api/users/<string:id>/transactions', methods=['GET'])
 def get_transaction_history(id):
     user = collection.find_one({"name" : id})
     return user["transaction_history"]
 
-@app.route('/users/<string:username>', methods=['GET'])
 def get_user_info(id):
     return collection.find_one({"name" : id})
 
@@ -340,14 +397,21 @@ def get_historical_data(ticker, start_date, end_date):
 
     return historical_data
 
-@app.route('/marketdata/<string:ticker>', methods=['GET'])
+@app.route('/api/marketdata/<string:ticker>', methods=['GET'])
 # range should be an integer representing # of days, since we only have resolution down to days
 def get_market_data(ticker, end_date, date_range):
     start_date = calculate_start_date(end_date, date_range)
     data = get_historical_data(ticker, start_date, end_date)
     return data
 
-#check_for_id("Bob")
+@app.route("/api/members")
+def members():
+    return {"members": ["Member1", "Member2", "Member3", "Member4"]}
+
+if __name__ == '__main__':
+    app.run(debug=True)
+
+check_for_id("Bob")
 #execute_buy('Bob', 'AAPL', '2023-11-06', 500)
 
 #execute_buy('Bob', 'AAPL', '2023-11-11', 100)
@@ -358,7 +422,7 @@ def get_market_data(ticker, end_date, date_range):
 
 #print(get_transaction_history('Bob'))
 #print(get_user_info("Bob"))
-check_for_id("Bob")
+#check_for_id("Bob")
 #execute_buy("Bob", "NVDA", "2022-12-12", 1000)
 #execute_buy("Bob", "NVDA", "2022-09-10", 500)
 #execute_sell("Bob", "NVDA", "2024-07-07", 15)
