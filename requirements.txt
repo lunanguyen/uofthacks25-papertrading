@@ -1,0 +1,5 @@
+yfinance
+flask
+Flask-Cors
+python-dotenv
+pymongo
