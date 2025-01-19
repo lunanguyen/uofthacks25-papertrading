@@ -59,6 +59,72 @@ def get_login_bonus(current_streak):
         return 500
     else:
         return 10000
+    
+# iterates through each stock in the portfolio, and updates percentage change to match the day
+# this will be called every time we login, just to make sure that we are up to date
+def update_pct_change(id, date):
+    user = collection.find_one({"name" : id})
+    stock_update = user['portfolio']
+    print(stock_update)
+    for ticker, data in stock_update.items():
+        prc = get_stock_price(ticker, date)['price']
+        new_pct_change = (prc - data['avg_price']) / data['avg_price'] * 100
+        collection.update_one(
+            {'name' : id},
+                {'$set' : {
+                    f'portfolio.{ticker}' : {
+                        "quantity" : data['quantity'], "avg_price" : data['avg_price'], "pct_change" : new_pct_change
+                    }
+                }
+            }
+        )
+
+def get_portfolio_value(id, date):
+    user = collection.find_one({"name" : id})
+    stock_update = user['portfolio']
+    val = user['current_funds']
+    for ticker in stock_update:
+        prc = get_stock_price(ticker, date)['price']
+        val += prc * stock_update[ticker].get('quantity')
+    return val
+
+    
+
+def add_days_to_datetime(original_datetime, days):
+    # Add the specified number of days to the original datetime
+    future_datetime = original_datetime + timedelta(days=days)
+    return future_datetime
+
+# only call this if date is greater than or equal to end date --> we will query the end date price if we are over
+def complete_quest(id, cur_date):
+    user_info = collection.find_one({"name" : id})
+    end_date = user_info["quest"].get("end_date")
+    portfolio_val = get_portfolio_value(id, end_date.strftime('%Y-%m-%d'))
+    if (portfolio_val - user_info["quest"].get("portfolio_value_at_start")) / user_info["quest"].get("portfolio_value_at_start") * 100 >= 5:
+        # increase the number of quests completed, we can also do something else here
+        collection.update_one(
+            {"name" : id},
+            {
+                "$set" : {
+                    "quests_completed" : user_info["quests_completed"] + 1
+                }
+            }
+        )
+    # reset the quest --> new quest but same thing for now
+    collection.update_one(
+            {"name" : id},
+            {
+                "$set" : {
+                    "quest" : {
+                        "end_date" : add_days_to_datetime(cur_date, days=30),  
+                        "quest_name" : "growth",
+                        "objective" : 5, # in percentage
+                        "portfolio_value_at_start" : user_info["portfolio_value"]
+                    }
+                }
+            }
+        )
+
 
 # input: an id 
 # checks the db for list of users
@@ -66,8 +132,9 @@ def get_login_bonus(current_streak):
 # if it does not exist, create user information and return in dictionary format
 
 # this is when login happens, so we will simply check the login streak and stuff like that
-def check_for_id(id):
+def check_for_id(id): 
     found_user = collection.find_one({"name": id})
+    cur_date = datetime.now()
     if found_user is None:
         # create a new user
         document = {
@@ -75,11 +142,20 @@ def check_for_id(id):
             "portfolio" : {},
             "transaction_history" : [],
             "current_funds" : 100000,
+            "portfolio_value" : 100000,
             "current_streak" : 1,
-            "last_login" : datetime.now()
+            "last_login" : datetime.now(),
+            "quests_completed" : 0,
+            # everyone starts off with a growth quest
+            "quest" : {
+                    "end_date" : add_days_to_datetime(cur_date, days=30),  
+                    "quest_name" : "growth",
+                    "objective" : 5, # in percentage
+                    "portfolio_value_at_start" : 100000
+                }
             }
         collection.insert_one(document)
-        return document
+        found_user = collection.find_one({"name" : id})
     else:
         # returning user
         new_login_time = datetime.now()
@@ -118,6 +194,20 @@ def check_for_id(id):
                               }
                     }
             )
+        # update the percentage change for the stocks
+        update_pct_change(id, found_user['last_login'].strftime('%Y-%m-%d'))
+        # update the unrealized value for the stocks
+        #print(found_user['last_login'].strftime('%Y-%m-%d'))
+        collection.update_one(
+            {'name' : id},
+            {'$set' : {
+                'portfolio_value' : get_portfolio_value(id, found_user['last_login'].strftime('%Y-%m-%d'))
+                }
+            }
+        )
+        # complete quest if we need to
+        if cur_date >= found_user["quest"].get("end_date"):
+            complete_quest(id, cur_date)
         return found_user
 
 
@@ -125,8 +215,6 @@ def check_for_id(id):
 def execute_buy(id, ticker, date, quantity):
     #try:
         prc = get_stock_price(ticker, date)['price'] # this should go into try except but it doesnt work
-        print(date)
-        print(prc)
         if prc == -1:
             # handle error, although this shouldn't happen
             raise Exception("Ticker Invalid")
@@ -250,10 +338,10 @@ def get_market_data(ticker, end_date, date_range):
     data = get_historical_data(ticker, start_date, end_date)
     return data
 
-check_for_id("Bob")
-#execute_buy('Bob', 'AAPL', '2023-11-06', 5)
+#check_for_id("Bob")
+#execute_buy('Bob', 'AAPL', '2023-11-06', 500)
 
-#execute_buy('Bob', 'AAPL', '2023-11-11', 10)
+#execute_buy('Bob', 'AAPL', '2023-11-11', 100)
 
 #execute_buy('Bob', 'AAPL', '2024-12-20', 10000000000)
 
@@ -261,9 +349,9 @@ check_for_id("Bob")
 
 #print(get_transaction_history('Bob'))
 #print(get_user_info("Bob"))
-
-#execute_buy("Bob", "NVDA", "2022-12-12", 10)
-#execute_buy("Bob", "NVDA", "2022-09-10", 5)
+check_for_id("Bob")
+#execute_buy("Bob", "NVDA", "2022-12-12", 1000)
+#execute_buy("Bob", "NVDA", "2022-09-10", 500)
 #execute_sell("Bob", "NVDA", "2024-07-07", 15)
 
 #print(get_market_data('NVDA', '2023-01-01', 30))
