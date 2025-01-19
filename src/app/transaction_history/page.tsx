@@ -4,41 +4,41 @@ import { DataGrid, Column, Paging } from "devextreme-react/data-grid";
 import { getUserInfo } from "../api/userAPI";
 import { getTransactionHistory } from "../api/transactionAPI";
 import { PageHeader } from "../layout/PageHeader";
+import { SessionProvider } from "next-auth/react"
 
 const TransactionPage = () => {
     const [userInfo, setUserInfo] = useState<any>(null);
     const [transactions, setTransactions] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState("");
-  
+      
     useEffect(() => {
       const fetchData = async () => {
         try {
-          const userId = "Bob"; // Replace with dynamic retrieval if necessary
-          const user = await getUserInfo(userId);
+            const userId = "gusteven3737@gmail.com"; // Replace with dynamic retrieval if necessary
+            const user = await getUserInfo(userId);
           
-          // Extract necessary variables from the user info
-          const {
-            name,
-            current_funds,
-            portfolio_value,
-            current_streak,
-          } = user;
+            // Extract necessary variables from the user info
+            const {
+                name,
+                current_funds,
+                portfolio_value,
+                current_streak,
+            } = user;
   
-          // Update state with user information
-          setUserInfo({
-            name,
-            current_funds: current_funds.toFixed(2),
-            portfolio_value: portfolio_value.toFixed(2),
-            current_streak,
-          });
+            // Update state with user information
+            setUserInfo({
+                name,
+                current_funds: current_funds.toFixed(2),
+                portfolio_value: portfolio_value.toFixed(2),
+                current_streak,
+            });
   
-          // Get transaction history and update state
-          const transactionHistory = await getTransactionHistory(userId);
-          setTransactions(transactionHistory);
-          console.log(transactions);
-          console.log(userInfo);
-  
+            // Get transaction history and update state
+            const transactionHistory = await getTransactionHistory(userId);
+            setTransactions(transactionHistory);
+            console.log(transactions);
+            console.log(userInfo);
         } catch (err: any) {
           console.error("Error fetching data:", err);
           setError("Failed to load data. Please try again later.");
@@ -90,7 +90,6 @@ const TransactionPage = () => {
             </div>
           })} 
         </div>
-        
       </div>
     );
   };
