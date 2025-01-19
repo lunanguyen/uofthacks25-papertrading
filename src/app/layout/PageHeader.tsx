@@ -5,7 +5,6 @@ import { signIn, signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
 import { useAppSelector, useAppDispatch, useAppStore } from '../lib/hooks'
 
-
 export function PageHeader() {
 
     // const dispatch = useDispatch();
@@ -30,7 +29,7 @@ export function PageHeader() {
 
                 <div className="flex flex-row gap-8 p-4 mr-4">
                     {session ? <button className="hover:text-gray-500"><Link href="/dashboard">Dashboard</Link> </button> : null}
-                    <button className="hover:text-gray-500">History</button>
+                    <button className="hover:text-gray-500"><Link href="/transaction_history">History</Link></button>
                     <button className="hover:text-gray-500">Order</button>
 
                 </div>

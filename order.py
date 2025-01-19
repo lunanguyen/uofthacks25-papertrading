@@ -141,8 +141,8 @@ def complete_quest(id, cur_date):
 # if it does not exist, create user information and return in dictionary format
 
 # this is when login happens, so we will simply check the login streak and stuff like that
-@app.route('/api/users/<string:id>', methods=['GET'])
-def check_for_id(id): 
+@app.route('/api/users/<string:id>', methods=['POST'])
+def check_for_id(id):
     found_user = collection.find_one({"name": id})
     cur_date = datetime.now()
     if found_user is None:
@@ -165,7 +165,7 @@ def check_for_id(id):
                 }
             }
         collection.insert_one(document)
-        found_user = collection.find_one({"name" : id})
+        #found_user = collection.find_one({"name" : id})
         return dumps(found_user), 201
     else:
         # returning user
@@ -177,10 +177,10 @@ def check_for_id(id):
                 {'name' : id},
                     {
                         '$set' : {
-                              'current_streak' : found_user['current_streak'] + 1,
-                              'last_login' : new_login_time,
-                              'current_funds' : found_user['current_funds'] + get_login_bonus(found_user['current_streak'] + 1)
-                              }
+                            'current_streak' : found_user['current_streak'] + 1,
+                            'last_login' : new_login_time,
+                            'current_funds' : found_user['current_funds'] + get_login_bonus(found_user['current_streak'] + 1)
+                            }
                     }
             )
         # logged in non consecutive dates
@@ -189,10 +189,10 @@ def check_for_id(id):
                 {'name' : id},
                     {
                         '$set' : {
-                              'current_streak' : 1,
-                              'last_login' : new_login_time,
-                              'current_funds' : found_user['current_funds'] + get_login_bonus(1)
-                              }
+                            'current_streak' : 1,
+                            'last_login' : new_login_time,
+                            'current_funds' : found_user['current_funds'] + get_login_bonus(1)
+                            }
                     }
             )
         # otherwise logged in on the same date
@@ -201,8 +201,8 @@ def check_for_id(id):
                 {'name' : id},
                     {
                         '$set' : {
-                              'last_login' : new_login_time,
-                              }
+                            'last_login' : new_login_time,
+                            }
                     }
             )
         # update the percentage change for the stocks
@@ -219,7 +219,8 @@ def check_for_id(id):
         # complete quest if we need to
         if cur_date >= found_user["quest"].get("end_date"):
             complete_quest(id, cur_date)
-    return dumps(found_user), 200
+        return dumps(found_user), 201
+
 
 
 # give id for user
