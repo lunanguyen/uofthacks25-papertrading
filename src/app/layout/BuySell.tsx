@@ -1,5 +1,34 @@
+'use client'
+import { useState, useEffect } from "react"
+import { buyStock } from "../api/transactionAPI";
+import { useSession } from "next-auth/react";
 
 export function BuySell() {
+
+    const {data: session} = useSession();
+
+    const [ticker, setTicker] = useState<string>('NVDA');
+    const [id, setID] = useState<string>('');
+    const [date, setDate] = useState<string>('');
+    const [quantity, setQuantity] = useState<number>(0);
+
+    const BuyStock = async () => {
+        try {
+            if (session) {
+                await buyStock(session.user.email, ticker, "a fake date", 5);
+                console.log("buy!")
+            } else {
+                console.log("no user")
+            }
+            
+        } catch{(err) => {
+            console.log(err);
+        }}
+        cons
+    }
+
+    // console.log(session)
+
     return <div className="flex flex-col gap-8 p-8  items-center ">
         <h1 className="text-6xl"> $ 95.25 </h1>
         {/* buy / sell col */}
@@ -25,7 +54,7 @@ export function BuySell() {
             <h1> 1230</h1>
         </div>
 
-        <button className="bg-slate-600  mt-5"> BUY/SELL BTC </button>
+        <button className="bg-slate-600  mt-5" onClick={BuyStock}> BUY/SELL BTC </button>
         </div>
 
         

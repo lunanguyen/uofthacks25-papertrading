@@ -14,13 +14,12 @@ export function TradeView() {
     const [stockData, setStockData] = useState<stock[] | null>(null);
     const [domain, setDomain] = useState(10)
     
-
     useEffect(() => {
         const stockData = async () => {
             const data = await fetch(`https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=IBM&interval=60min&apikey=${process.env.ALPHA_VANTAGE_API_KEY}`)
             // assume no error handling ?
             const resp = await data.json();
-
+            console.log(resp);
             if (resp) {
 
                 const timeSeries = resp["Time Series (60min)"];
@@ -38,9 +37,11 @@ export function TradeView() {
                     setStockData(stockData);
                     setDomain(stockData[0].data);
                 }
+            } else {
+                console.log("cant fetch")
             }
         };
-        stockData();
+        // stockData();
     }, []);
 
     
