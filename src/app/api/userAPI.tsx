@@ -7,12 +7,12 @@ const api = axios.create({
 // Get user profile
 export const getUserInfo = async (id: string) => {
     try {
-        const response = await api.get(`/users/${id}`);
+        const response = await api.post(`/users/${id}`);
         console.log(response.status);
         return response.data;
     } catch (error) {
-        console.error("Error fetching user profile:", error);
-        throw error;
+        console.error("Error adding/updating user profile:", error);
+        return error;
     }
 };
 
