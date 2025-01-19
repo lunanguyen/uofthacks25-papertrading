@@ -1,8 +1,13 @@
 import yfinance as yf
+from flask import Flask, jsonify, request
+from flask_cors import CORS
 from datetime import datetime, timedelta
 from pymongo import MongoClient
 import os
 from dotenv import load_dotenv
+
+app = Flask(__name__)
+CORS(app)
 
 # Load environment variables
 load_dotenv()
@@ -212,6 +217,7 @@ def check_for_id(id):
 
 
 # give id for user
+@app.route('/users/<string:username>/buy', methods=['POST'])
 def execute_buy(id, ticker, date, quantity):
     #try:
         prc = get_stock_price(ticker, date)['price'] # this should go into try except but it doesnt work
@@ -265,6 +271,7 @@ def execute_buy(id, ticker, date, quantity):
         # no need to return anything?
         # return 0
     
+@app.route('/users/<string:username>/sell', methods=['POST'])
 def execute_sell(id, ticker, date, quantity):
     prc = get_stock_price(ticker, date)['price']
 
@@ -315,11 +322,12 @@ def execute_sell(id, ticker, date, quantity):
     )
     # finished
 
-
+@app.route('/users/<string:username>/transactions', methods=['GET'])
 def get_transaction_history(id):
     user = collection.find_one({"name" : id})
     return user["transaction_history"]
 
+@app.route('/users/<string:username>', methods=['GET'])
 def get_user_info(id):
     return collection.find_one({"name" : id})
 
@@ -332,6 +340,7 @@ def get_historical_data(ticker, start_date, end_date):
 
     return historical_data
 
+@app.route('/marketdata/<string:ticker>', methods=['GET'])
 # range should be an integer representing # of days, since we only have resolution down to days
 def get_market_data(ticker, end_date, date_range):
     start_date = calculate_start_date(end_date, date_range)
@@ -380,4 +389,3 @@ check_for_id("Bob")
 #   - so we should worry about how the users are stored in the database --> discuss with luna tomorrow
 
 # - we should also be able to get all the stock information, so that the frontend can display it --> really easy with yfinance, no need for db
-
