@@ -11,36 +11,27 @@ export function BuySell() {
 
     const [ticker, setTicker] = useState<string>('NVDA');
     const [id, setID] = useState<string>('');
-    const [date, setDate] = useState<string>('');
+    const [date, setDate] = useState<string>(() => {
+        const today = new Date();
+        today.setDate(today.getDate() - 1); // Subtract one day
+        return today.toISOString().split('T')[0]; // Format to YYYY-MM-DD (ISO format)
+    });
     const [quantity, setQuantity] = useState<number>();
 
     const BuySellStock = async () => {
         console.log("BuyStock button clicked!");
         try {
             if (option == "Buy") {
-                const data = await buyStock("Bob", 'NVDA', '2023-01-03', 5);
+                const data = await buyStock(session.user.email, ticker, date, quantity);
                 console.log(data)
                 console.log("buy!")
 
             } else if (option == "Sell") {
-                const data = await sellStock("Bob", 'NVDA', '2023-01-03', 5);
+                const data = await sellStock(session.user.email, ticker, date, quantity);
                 console.log(data)
                 console.log("sell!")
-
             }
             setOption("Transaction Complete!");
-        } catch{(err) => {
-            console.log(err);
-        }}
-    }
-
-    const SellStock = async () => {
-        console.log("BuyStock button clicked!");
-        try {
-            const data = await sellStock("Bob", ticker, "2020-12-10", 5);
-            console.log(data)
-            console.log("sell!")
-            
         } catch{(err) => {
             console.log(err);
         }}
