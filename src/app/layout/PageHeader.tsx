@@ -1,7 +1,9 @@
 "use client"
 import React, { useState } from 'react';
+import Link from '../../../node_modules/next/link';
 import { signIn, signOut } from "next-auth/react";
 import { useSession } from "next-auth/react"
+import pp from "../../../public/pp.png"
 
 export function PageHeader() {
 
@@ -10,11 +12,12 @@ export function PageHeader() {
     return <div className="flex flex-row items-center  sticky top-4">
         <div className="flex flex-row m-8 gap-80 justify-between border-blue border-2 rounded-3xl bg:blur-sm  backdrop-blur-sm"> 
 
-            <button className="p-4 ml-4">PerspecTrade</button>
+            <button className="p-4 ml-4"><Link href="/"><img src = "pp.svg" width="50%"/></Link></button>
 
                 <div className="flex flex-row gap-8 p-4 mr-4">
-                    <button className="hover:text-gray-500">Notifications</button>
+                    {session ? <button className="hover:text-gray-500"><Link href="/dashboard">Dashboard</Link> </button> : null}
                     <button className="hover:text-gray-500">History</button>
+                    <button className="hover:text-gray-500">Order</button>
 
                 </div>
             </div>
