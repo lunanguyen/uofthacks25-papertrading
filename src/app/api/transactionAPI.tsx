@@ -30,10 +30,10 @@ export const buyStock = async (id: string, ticker: string, date: string, quantit
   }
 };
 
-export const sellStock = async (id: string, stockTicker: string, date: string, quantity: number) => {
+export const sellStock = async (id: string, ticker: string, date: string, quantity: number) => {
     try {
         const response = await api.post(`/users/${id}/sell`, {
-            stockTicker,
+            ticker,
             date,
             quantity,
           });

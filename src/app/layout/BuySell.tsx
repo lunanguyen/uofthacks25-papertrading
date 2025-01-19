@@ -18,12 +18,12 @@ export function BuySell() {
         console.log("BuyStock button clicked!");
         try {
             if (option == "Buy") {
-                const data = await buyStock("Bob", ticker, date, quantity);
+                const data = await buyStock("Bob", 'NVDA', '2023-01-03', 5);
                 console.log(data)
                 console.log("buy!")
 
             } else if (option == "Sell") {
-                const data = await sellStock("Bob", ticker, date, quantity);
+                const data = await sellStock("Bob", 'NVDA', '2023-01-03', 5);
                 console.log(data)
                 console.log("sell!")
 
