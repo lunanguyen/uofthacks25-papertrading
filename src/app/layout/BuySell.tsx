@@ -34,20 +34,6 @@ export function BuySell() {
         }}
     }
 
-    const SellStock = async () => {
-        console.log("BuyStock button clicked!");
-        try {
-            const data = await sellStock("Bob", ticker, "2020-12-10", 5);
-            console.log(data)
-            console.log("sell!")
-            
-        } catch{(err) => {
-            console.log(err);
-        }}
-    }
-
-    console.log(session)
-
     return <div className="flex flex-col gap-8 p-8  items-center ">
         <h1 className="text-xl"> Ticker: IBM</h1>
         <h1 className="text-6xl"> $ {price}</h1>
