@@ -1,9 +1,10 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from '../../../node_modules/next/link';
 import { signIn, signOut } from "next-auth/react";
 import { useSession } from "next-auth/react";
 import { useAppSelector, useAppDispatch, useAppStore } from '../lib/hooks'
+import { getUserInfo } from "../api/userAPI"
 
 export function PageHeader() {
 
@@ -12,15 +13,30 @@ export function PageHeader() {
 
     const handleLogin = async () => {
         await signIn("google");
+    }
+
+    const getUser = async() => {
         try {
             // dispatch(setId(session.user.email))
-            console.log("done")
+            if (session) {
+                console.log('getUser is about to run')
+                await getUserInfo(session.user.email);
+                console.log("done")
+            }
         } catch{(err) => {
             console.log(err);
         }}
     }
-    const {data: session} = useSession();
 
+    const {data: session} = useSession(); 
+
+    // Use useEffect to run getUser when session changes
+    useEffect(() => {
+        if (session) {
+            getUser(); // Call getUser when session is available
+        }
+    }, [session]); // Dependency array to trigger when session changes
+    
     return <div className="flex flex-row items-center  sticky top-4">
 
         <div className="flex flex-row m-8 gap-80 justify-between border-blue border-2 rounded-3xl bg:blur-sm  backdrop-blur-sm"> 
