@@ -4,7 +4,7 @@ import { buyStock,sellStock } from "../api/transactionAPI";
 import { useSession } from "next-auth/react";
 
 export function BuySell() {
-    const price = 50;
+    const price = 131.76;
     const {data: session} = useSession();
 
     const [option, setOption] = useState("Buy");
@@ -37,10 +37,8 @@ export function BuySell() {
         }}
     }
 
-    console.log(session)
-
     return <div className="flex flex-col gap-8 p-8  items-center ">
-        <h1 className="text-xl"> Ticker: IBM</h1>
+        <h1 className="text-xl"> Ticker: NVDA</h1>
         <h1 className="text-6xl"> $ {price}</h1>
         {/* buy / sell col */}
         <div className="flex flex-row gap-4">
@@ -72,7 +70,7 @@ export function BuySell() {
         </form>
 
         <div className="flex flex-row justify-between">
-            <h1> BTC Price</h1>
+            <h1> NVDA Price</h1>
             <h1> {price}</h1>
         </div>
         <div className="flex flex-row justify-between">

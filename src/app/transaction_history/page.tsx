@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from "react";
-import { DataGrid, Column, Paging } from "devextreme-react/data-grid";
+// import { DataGrid, Column, Paging } from "devextreme-react/data-grid";
 import { getUserInfo } from "../api/userAPI";
 import { getTransactionHistory } from "../api/transactionAPI";
 import { PageHeader } from "../layout/PageHeader";
