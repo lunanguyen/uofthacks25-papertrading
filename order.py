@@ -441,8 +441,8 @@ def members():
 if __name__ == '__main__':
     app.run(debug=True)
 
-#check_for_id("Bob")
-get_market_data('NVDA')
+check_for_id("Bob")
+#get_market_data('NVDA')
 #execute_buy('Bob', 'AAPL', '2023-11-06', 500)
 
 #execute_buy('Bob', 'AAPL', '2023-11-11', 100)
