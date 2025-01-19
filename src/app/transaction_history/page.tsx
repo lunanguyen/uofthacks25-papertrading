@@ -1,6 +1,6 @@
 'use client'
 import React, { useEffect, useState } from "react";
-import { DataGrid, Column, Paging } from "devextreme-react/data-grid";
+// import { DataGrid, Column, Paging } from "devextreme-react/data-grid";
 import { getUserInfo } from "../api/userAPI";
 import { getTransactionHistory } from "../api/transactionAPI";
 
@@ -63,7 +63,7 @@ const TransactionPage = () => {
         )}
   
         <h3>Transaction History</h3>
-        <DataGrid
+        {/* <DataGrid
           dataSource={transactions}
           showBorders={true}
           columnAutoWidth={true}
@@ -74,7 +74,7 @@ const TransactionPage = () => {
           <Column dataField="date" caption="Date" dataType="date" />
           <Column dataField="prc" caption="Price" format="currency" />
           <Column dataField="quantity" caption="Quantity" />
-        </DataGrid>
+        </DataGrid> */}
       </div>
     );
   };

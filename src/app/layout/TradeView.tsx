@@ -41,7 +41,7 @@ export function TradeView() {
                 console.log("cant fetch")
             }
         };
-        // stockData();
+        stockData();
     }, []);
 
     
