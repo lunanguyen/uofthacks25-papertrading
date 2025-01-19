@@ -385,9 +385,9 @@ def get_transaction_history(id):
     user = collection.find_one({"name" : id})
     return user["transaction_history"]
 
-@app.route('/api/users/<string:questId>', methods=['GET'])
-def get_quest(id):
-    user = collection.find_one({"name" : id})
+@app.route('/api/quest/<string:questId>', methods=['GET'])
+def get_quest(questId):
+    user = collection.find_one({"name" : questId})
     return dumps(user["quest"]), 200
 
 
