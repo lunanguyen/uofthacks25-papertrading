@@ -101,7 +101,6 @@ def add_days_to_datetime(original_datetime, days):
     future_datetime = original_datetime + timedelta(days=days)
     return future_datetime
 
-# only call this if date is greater than or equal to end date --> we will query the end date price if we are over
 def complete_quest(id, cur_date):
     user_info = collection.find_one({"name" : id})
     end_date = user_info["quest"].get("end_date")
@@ -384,6 +383,12 @@ def execute_sell(id):
 def get_transaction_history(id):
     user = collection.find_one({"name" : id})
     return user["transaction_history"]
+
+@app.route('/api/users/<string:questId>', methods=['GET'])
+def get_quest(id):
+    user = collection.find_one({"name" : id})
+    return dumps(user["quest"]), 200
+
 
 def get_user_info(id):
     return collection.find_one({"name" : id})
