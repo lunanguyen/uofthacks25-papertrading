@@ -15,7 +15,7 @@ export function BuySell() {
     const BuyStock = async () => {
         try {
             if (session) {
-                await buyStock(session.user.email, ticker, "a fake date", 5);
+                await buyStock("Bob", ticker, "a fake date", 5);
                 console.log("buy!")
             } else {
                 console.log("no user")
