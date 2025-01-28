@@ -48,4 +48,4 @@ Check out our demo here: [Watch the demo](https://youtu.be/t4JP5BMkg-8)
 
 - Luna Nguyen, GitHub: [https://github.com/lunanguyen/](https://github.com/lunanguyen/)
 - Monica Trinh, GitHub: [https://github.com/monmon0](https://github.com/monmon0)
-- Steven Guo, GitHub: [https://github.com/br0mabs](https://github.com/br0mabs)
+- Steven Gu, GitHub: [https://github.com/br0mabs](https://github.com/br0mabs)
